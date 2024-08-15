@@ -25,6 +25,7 @@ export type PopupProps = {
   forceOpen?: boolean
   horizontalAlign?: 'center' | 'left' | 'right'
   initActive?: boolean
+  noBackground?: boolean
   onToggleOpen?: (active: boolean) => void
   render?: (any) => React.ReactNode
   showOnHover?: boolean
@@ -46,6 +47,7 @@ export const Popup: React.FC<PopupProps> = (props) => {
     forceOpen,
     horizontalAlign: horizontalAlignFromProps = 'left',
     initActive = false,
+    noBackground = false,
     onToggleOpen,
     render,
     showOnHover = false,
@@ -170,12 +172,28 @@ export const Popup: React.FC<PopupProps> = (props) => {
             onMouseLeave={() => setActive(false)}
           >
             <PopupTrigger
-              {...{ active, button, buttonType, className: buttonClassName, disabled, setActive }}
+              {...{
+                active,
+                button,
+                buttonType,
+                className: buttonClassName,
+                disabled,
+                noBackground,
+                setActive,
+              }}
             />
           </div>
         ) : (
           <PopupTrigger
-            {...{ active, button, buttonType, className: buttonClassName, disabled, setActive }}
+            {...{
+              active,
+              button,
+              buttonType,
+              className: buttonClassName,
+              disabled,
+              noBackground,
+              setActive,
+            }}
           />
         )}
       </div>

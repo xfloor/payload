@@ -69,6 +69,7 @@ const SecondaryActions = ({ className, disabled, secondaryActions }) => {
       className={disabled ? `${baseClass}--popup-disabled` : ''}
       disabled={disabled}
       horizontalAlign="right"
+      noBackground
       onToggleOpen={(active) => (!disabled ? setShowSecondaryActions(active) : undefined)}
       size="large"
       verticalAlign="bottom"
