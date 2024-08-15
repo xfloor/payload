@@ -8,6 +8,7 @@ import CustomIDs from './collections/CustomIDs.js'
 import DisablePublish from './collections/DisablePublish.js'
 import DraftPosts from './collections/Drafts.js'
 import DraftWithMax from './collections/DraftsWithMax.js'
+import LocalizedPosts from './collections/Localized.js'
 import Posts from './collections/Posts.js'
 import VersionPosts from './collections/Versions.js'
 import AutosaveGlobal from './globals/Autosave.js'
@@ -28,6 +29,7 @@ export default buildConfigWithDefaults({
     AutosavePosts,
     DraftPosts,
     DraftWithMax,
+    LocalizedPosts,
     VersionPosts,
     CustomIDs,
   ],

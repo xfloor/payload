@@ -2,7 +2,7 @@
 
 import type { MappedComponent } from 'payload'
 
-import { useLocale } from '@payloadcms/ui'
+import { useConfig, useLocale } from '@payloadcms/ui'
 import React, { useCallback } from 'react'
 
 import { useForm, useFormModified } from '../../forms/Form/context.js'
@@ -15,14 +15,16 @@ import { useTranslation } from '../../providers/Translation/index.js'
 
 export const DefaultPublishButton: React.FC<{
   label?: string
-  publishSpecificLocale?: () => void
-}> = ({ label: labelProp, publishSpecificLocale }) => {
+}> = ({ label: labelProp }) => {
   const { hasPublishPermission, publishedDoc, unpublishedVersions } = useDocumentInfo()
 
   const { submit } = useForm()
   const modified = useFormModified()
   const editDepth = useEditDepth()
-  const { label: localeLabel } = useLocale()
+  const { code } = useLocale()
+  const { config } = useConfig()
+  const { localization } = config
+
   const { t } = useTranslation()
   const label = labelProp || t('version:publishChanges')
 
@@ -46,6 +48,27 @@ export const DefaultPublishButton: React.FC<{
     })
   }, [submit])
 
+  const secondaryActions =
+    localization &&
+    localization.locales.map((locale) => {
+      const formattedLabel = typeof locale.label === 'string' ? locale.label : locale[code].label
+      return {
+        label: `Publish ${formattedLabel} only`,
+        onClick: () => publishSpecificLocale(locale.code),
+      }
+    })
+
+  const publishSpecificLocale = useCallback(
+    (locale) => {
+      void submit({
+        overrides: {
+          _status: 'published',
+        },
+      })
+    },
+    [submit],
+  )
+
   if (!hasPublishPermission) return null
 
   return (
@@ -53,12 +76,7 @@ export const DefaultPublishButton: React.FC<{
       buttonId="action-save"
       disabled={!canPublish}
       onClick={publish}
-      secondaryActions={[
-        {
-          label: `Publish ${localeLabel} only`,
-          onClick: publishSpecificLocale,
-        },
-      ]}
+      secondaryActions={secondaryActions}
       size="medium"
       type="button"
     >
