@@ -38,7 +38,7 @@ export default buildConfigWithDefaults({
   indexSortableFields: true,
   localization: {
     defaultLocale: 'en',
-    locales: ['en', 'es'],
+    locales: ['en', 'es', 'de'],
   },
   onInit: async (payload) => {
     if (process.env.SEED_IN_CONFIG_ONINIT !== 'false') {

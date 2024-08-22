@@ -1,8 +1,6 @@
 import type { SanitizedGlobalConfig } from '../globals/config/types.js'
 import type { Document, Payload, PayloadRequest, Where } from '../types/index.js'
 
-import { docHasTimestamps } from '../types/index.js'
-
 type Args = {
   config: SanitizedGlobalConfig
   locale?: string
@@ -40,20 +38,26 @@ export const getLatestGlobalVersion = async ({
     ).docs[0]
   }
 
-  const global = await payload.db.findGlobal({
-    slug,
-    locale,
-    req,
-    where,
-  })
-  const globalExists = Boolean(global)
+  if (!latestVersion) {
+    if (!published) {
+      const global = await payload.db.findGlobal({
+        slug,
+        locale,
+        req,
+        where,
+      })
+      const globalExists = Boolean(global)
 
-  if (!latestVersion || (docHasTimestamps(global) && latestVersion.updatedAt < global.updatedAt)) {
-    return {
-      global,
-      globalExists,
+      return {
+        global,
+        globalExists,
+      }
     }
+
+    return undefined
   }
+
+  const globalExists = Boolean(latestVersion)
 
   return {
     global: {

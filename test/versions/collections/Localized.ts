@@ -13,6 +13,11 @@ const LocalizedPosts: CollectionConfig = {
       type: 'text',
       localized: true,
     },
+    {
+      name: 'description',
+      type: 'text',
+      localized: true,
+    },
   ],
 }
 

@@ -17,6 +17,7 @@ type Args = {
   payload: Payload
   publishSpecificLocale?: string
   req?: PayloadRequest
+  snapshot: any
 }
 
 export const saveVersion = async ({
@@ -29,6 +30,7 @@ export const saveVersion = async ({
   payload,
   publishSpecificLocale,
   req,
+  snapshot,
 }: Args): Promise<TypeWithID> => {
   let result
   let createNewVersion = true
@@ -75,7 +77,6 @@ export const saveVersion = async ({
           updatedAt: draft ? now : new Date(doc.updatedAt).toISOString(),
           version: {
             ...versionData,
-            publishedLocale: publishSpecificLocale,
           },
         }
 
@@ -102,27 +103,44 @@ export const saveVersion = async ({
     }
 
     if (createNewVersion) {
+      const createVersionArgs = {
+        autosave: Boolean(autosave),
+        collectionSlug: undefined,
+        createdAt: doc?.createdAt ? new Date(doc.createdAt).toISOString() : now,
+        globalSlug: undefined,
+        parent: collection ? id : undefined,
+        req,
+        updatedAt: draft ? now : new Date(doc.updatedAt).toISOString(),
+      }
+
       if (collection) {
-        result = await payload.db.createVersion({
-          autosave: Boolean(autosave),
-          collectionSlug: collection.slug,
-          createdAt: doc?.createdAt ? new Date(doc.createdAt).toISOString() : now,
-          parent: collection ? id : undefined,
-          req,
-          updatedAt: draft ? now : new Date(doc.updatedAt).toISOString(),
-          versionData,
-        })
+        createVersionArgs.collectionSlug = collection.slug
       }
 
       if (global) {
-        result = await payload.db.createGlobalVersion({
-          autosave: Boolean(autosave),
-          createdAt: doc?.createdAt ? new Date(doc.createdAt).toISOString() : now,
-          globalSlug: global.slug,
-          parent: collection ? id : undefined,
-          req,
-          updatedAt: draft ? now : new Date(doc.updatedAt).toISOString(),
-          versionData,
+        createVersionArgs.globalSlug = global.slug
+      }
+
+      result = await payload.db.createVersion({
+        ...createVersionArgs,
+        publishedLocale: publishSpecificLocale,
+        versionData,
+      })
+
+      if (publishSpecificLocale && snapshot) {
+        const snapshotData = deepCopyObjectSimple(snapshot)
+        if (snapshotData._id) delete snapshotData._id
+
+        snapshotData._status = 'draft'
+
+        const snapshotDate = new Date().toISOString()
+
+        await payload.db.createVersion({
+          ...createVersionArgs,
+          createdAt: snapshotDate,
+          snapshot: true,
+          updatedAt: snapshotDate,
+          versionData: snapshotData,
         })
       }
     }

@@ -3,8 +3,6 @@ import type { FindOneArgs } from '../database/types.js'
 import type { Payload, PayloadRequest } from '../types/index.js'
 import type { TypeWithVersion } from './types.js'
 
-import { docHasTimestamps } from '../types/index.js'
-
 type Args = {
   config: SanitizedCollectionConfig
   id: number | string
@@ -40,10 +38,14 @@ export const getLatestCollectionVersion = async <T extends TypeWithID = any>({
     ;[latestVersion] = docs
   }
 
-  const doc = await payload.db.findOne<T>({ ...query, req })
+  if (!latestVersion) {
+    if (!published) {
+      const doc = await payload.db.findOne<T>({ ...query, req })
 
-  if (!latestVersion || (docHasTimestamps(doc) && latestVersion.updatedAt < doc.updatedAt)) {
-    return doc
+      return doc
+    }
+
+    return undefined
   }
 
   return {

@@ -274,7 +274,7 @@ function initCollectionsGraphQL({ config, graphqlResult }: InitCollectionsGraphQ
     if (collectionConfig.versions) {
       const versionIDType = config.db.defaultIDType === 'text' ? GraphQLString : GraphQLInt
       const versionCollectionFields: Field[] = [
-        ...buildVersionCollectionFields(collectionConfig),
+        ...buildVersionCollectionFields(this.payload.config, collectionConfig),
         {
           name: 'id',
           type: config.db.defaultIDType as 'text',
