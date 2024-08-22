@@ -2,28 +2,40 @@
 
 import type { MappedComponent } from 'payload'
 
-import { useConfig, useLocale } from '@payloadcms/ui'
+import * as qs from 'qs-esm'
 import React, { useCallback } from 'react'
 
 import { useForm, useFormModified } from '../../forms/Form/context.js'
 import { FormSubmit } from '../../forms/Submit/index.js'
 import { useHotkey } from '../../hooks/useHotkey.js'
 import { RenderComponent } from '../../providers/Config/RenderComponent.js'
+import { useConfig } from '../../providers/Config/index.js'
 import { useDocumentInfo } from '../../providers/DocumentInfo/index.js'
 import { useEditDepth } from '../../providers/EditDepth/index.js'
+import { useLocale } from '../../providers/Locale/index.js'
 import { useTranslation } from '../../providers/Translation/index.js'
-
 export const DefaultPublishButton: React.FC<{
   label?: string
 }> = ({ label: labelProp }) => {
-  const { hasPublishPermission, publishedDoc, unpublishedVersions } = useDocumentInfo()
-
+  const {
+    id,
+    collectionSlug: collection,
+    globalSlug: global,
+    hasPublishPermission,
+    publishedDoc,
+    unpublishedVersions,
+  } = useDocumentInfo()
   const { submit } = useForm()
   const modified = useFormModified()
   const editDepth = useEditDepth()
   const { code } = useLocale()
   const { config } = useConfig()
-  const { localization } = config
+
+  const {
+    localization,
+    routes: { api },
+    serverURL,
+  } = config
 
   const { t } = useTranslation()
   const label = labelProp || t('version:publishChanges')
@@ -48,6 +60,26 @@ export const DefaultPublishButton: React.FC<{
     })
   }, [submit])
 
+  const publishSpecificLocale = useCallback(
+    (locale) => {
+      const params = qs.stringify({
+        publishSpecificLocale: locale,
+      })
+
+      const action = `${serverURL}${api}${
+        global ? `/globals/${global}` : `/${collection}/${id ? `${'/' + id}` : ''}`
+      }${params ? '?' + params : ''}`
+
+      void submit({
+        action,
+        overrides: {
+          _status: 'published',
+        },
+      })
+    },
+    [api, collection, global, id, serverURL, submit],
+  )
+
   const secondaryActions =
     localization &&
     localization.locales.map((locale) => {
@@ -57,17 +89,6 @@ export const DefaultPublishButton: React.FC<{
         onClick: () => publishSpecificLocale(locale.code),
       }
     })
-
-  const publishSpecificLocale = useCallback(
-    (locale) => {
-      void submit({
-        overrides: {
-          _status: 'published',
-        },
-      })
-    },
-    [submit],
-  )
 
   if (!hasPublishPermission) return null
 

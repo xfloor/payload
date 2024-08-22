@@ -15,6 +15,7 @@ import AutosaveGlobal from './globals/Autosave.js'
 import DisablePublishGlobal from './globals/DisablePublish.js'
 import DraftGlobal from './globals/Draft.js'
 import DraftWithMaxGlobal from './globals/DraftWithMax.js'
+import LocalizedGlobal from './globals/LocalizedGlobal.js'
 import { seed } from './seed.js'
 
 export default buildConfigWithDefaults({
@@ -33,7 +34,7 @@ export default buildConfigWithDefaults({
     VersionPosts,
     CustomIDs,
   ],
-  globals: [AutosaveGlobal, DraftGlobal, DraftWithMaxGlobal, DisablePublishGlobal],
+  globals: [AutosaveGlobal, DraftGlobal, DraftWithMaxGlobal, DisablePublishGlobal, LocalizedGlobal],
   indexSortableFields: true,
   localization: {
     defaultLocale: 'en',
