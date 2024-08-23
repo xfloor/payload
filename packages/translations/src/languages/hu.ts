@@ -187,6 +187,7 @@ export const huTranslations: DefaultTranslationsObject = {
     cancel: 'Mégsem',
     changesNotSaved:
       'A módosítások nem lettek mentve. Ha most távozik, elveszíti a változtatásokat.',
+    clearAll: undefined,
     close: 'Bezárás',
     collapse: 'Összecsukás',
     collections: 'Gyűjtemények',
@@ -407,6 +408,7 @@ export const huTranslations: DefaultTranslationsObject = {
     lastSavedAgo: 'Utoljára mentve {{distance}} órája',
     noFurtherVersionsFound: 'További verziók nem találhatók',
     noRowsFound: 'Nem található {{label}}',
+    noRowsSelected: undefined,
     preview: 'Előnézet',
     previouslyPublished: 'Korábban Közzétéve',
     problemRestoringVersion: 'Hiba történt a verzió visszaállításakor',
