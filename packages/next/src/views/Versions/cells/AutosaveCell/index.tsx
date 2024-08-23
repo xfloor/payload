@@ -24,12 +24,12 @@ export const AutosaveCell: React.FC<AutosaveCellProps> = ({
   latestDraftVersion,
   latestPublishedVersion,
 }) => {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
   const { rowData } = useTableCell()
   const {
     config: { localization },
   } = useConfig()
-  const { code } = useLocale()
+
   const publishedLocale = rowData?.publishedLocale || undefined
   const status = rowData?.version._status
   let publishedLocalePill = null
@@ -54,9 +54,13 @@ export const AutosaveCell: React.FC<AutosaveCellProps> = ({
   if (publishedLocale) {
     const locale = localization && localization.locales.find((loc) => loc.code === publishedLocale)
     const formattedLabel =
-      typeof locale.label === 'string' ? locale.label : locale.label && locale.label[code]
+      typeof locale.label === 'string' ? locale.label : locale.label && locale.label[i18n?.language]
 
-    publishedLocalePill = <Pill pillStyle="warning">{formattedLabel} Only</Pill>
+    publishedLocalePill = (
+      <Pill pillStyle="warning">
+        {formattedLabel} {t('general:only')}
+      </Pill>
+    )
   }
 
   return (

@@ -254,11 +254,11 @@ export const updateByIDOperation = async <TSlug extends CollectionSlug>(
     let publishedDocWithLocales = docWithLocales
     let versionSnapshotResult
 
-    const beforeChangeArgs: Args<Partial<DataFromCollectionSlug<TSlug>>> = {
+    const beforeChangeArgs: Args<DataFromCollectionSlug<TSlug>> = {
       id,
       collection: collectionConfig,
       context: req.context,
-      data,
+      data: { ...data, id },
       doc: originalDoc,
       docWithLocales: undefined,
       global: null,

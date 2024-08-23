@@ -12,7 +12,6 @@ import { RenderComponent } from '../../providers/Config/RenderComponent.js'
 import { useConfig } from '../../providers/Config/index.js'
 import { useDocumentInfo } from '../../providers/DocumentInfo/index.js'
 import { useEditDepth } from '../../providers/EditDepth/index.js'
-import { useLocale } from '../../providers/Locale/index.js'
 import { useTranslation } from '../../providers/Translation/index.js'
 import { PopupList } from '../Popup/index.js'
 export const DefaultPublishButton: React.FC<{
@@ -29,7 +28,6 @@ export const DefaultPublishButton: React.FC<{
   const { submit } = useForm()
   const modified = useFormModified()
   const editDepth = useEditDepth()
-  const { code } = useLocale()
   const { config } = useConfig()
 
   const {
@@ -38,7 +36,7 @@ export const DefaultPublishButton: React.FC<{
     serverURL,
   } = config
 
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
   const label = labelProp || t('version:publishChanges')
 
   const hasNewerVersions = unpublishedVersions?.totalDocs > 0
@@ -89,7 +87,9 @@ export const DefaultPublishButton: React.FC<{
         localization
           ? localization.locales.map((locale) => {
               const formattedLabel =
-                typeof locale.label === 'string' ? locale.label : locale.label && locale.label[code]
+                typeof locale.label === 'string'
+                  ? locale.label
+                  : locale.label && locale.label[i18n?.language]
 
               return (
                 <PopupList.ButtonGroup key={locale.code}>
