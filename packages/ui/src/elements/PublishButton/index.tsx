@@ -89,12 +89,12 @@ export const DefaultPublishButton: React.FC<{
         localization
           ? localization.locales.map((locale) => {
               const formattedLabel =
-                typeof locale.label === 'string' ? locale.label : locale[code].label
+                typeof locale.label === 'string' ? locale.label : locale.label && locale.label[code]
 
               return (
                 <PopupList.ButtonGroup key={locale.code}>
                   <PopupList.Button onClick={() => publishSpecificLocale(locale.code)}>
-                    Publish {formattedLabel} only
+                    {t('version:publishIn', { locale: formattedLabel || locale.code })}
                   </PopupList.Button>
                 </PopupList.ButtonGroup>
               )
