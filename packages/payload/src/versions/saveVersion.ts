@@ -17,7 +17,7 @@ type Args = {
   payload: Payload
   publishSpecificLocale?: string
   req?: PayloadRequest
-  snapshot: any
+  snapshot?: any
 }
 
 export const saveVersion = async ({
