@@ -73,6 +73,10 @@ export const updateByIDOperation = async <TSlug extends CollectionSlug>(
         })) || args
     }, Promise.resolve())
 
+    if (args.publishSpecificLocale) {
+      args.req.locale = args.publishSpecificLocale
+    }
+
     const {
       id,
       autosave = false,

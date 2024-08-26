@@ -33,7 +33,7 @@ export interface Config {
     'disable-publish-global': DisablePublishGlobal;
     'localized-global': LocalizedGlobal;
   };
-  locale: 'en' | 'es';
+  locale: 'en' | 'es' | 'de';
   user: User & {
     collection: 'users';
   };
@@ -157,6 +157,7 @@ export interface DraftWithMaxPost {
 export interface LocalizedPost {
   id: string;
   text?: string | null;
+  description?: string | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -287,6 +288,6 @@ export interface Auth {
 
 
 declare module 'payload' {
-  // @ts-ignore
+  // @ts-ignore 
   export interface GeneratedTypes extends Config {}
 }

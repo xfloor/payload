@@ -166,6 +166,11 @@ const DocumentInfo: React.FC<
               },
             ],
           },
+          {
+            snapshot: {
+              exists: false,
+            },
+          },
         ],
       },
     }
