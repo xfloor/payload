@@ -154,10 +154,14 @@ export interface DraftWithMaxPost {
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "localized-posts".
  */
+type LocalizedString = {
+  [k: string]: string;
+};
+
 export interface LocalizedPost {
   id: string;
-  text?: string | null;
-  description?: string | null;
+  text?: string | LocalizedString | null;
+  description?: string | LocalizedString | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -288,6 +292,6 @@ export interface Auth {
 
 
 declare module 'payload' {
-  // @ts-ignore 
+  // @ts-ignore
   export interface GeneratedTypes extends Config {}
 }
