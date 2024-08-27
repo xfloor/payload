@@ -12,6 +12,8 @@ export const VersionsPill: React.FC = () => {
   // documents that are version enabled _always_ have at least one version
   const hasVersions = versions?.totalDocs > 0
 
+  const versionsWithoutSnapshots = versions?.docs?.filter((version) => !version.snapshot)
+
   if (hasVersions)
     return (
       <span
@@ -19,7 +21,7 @@ export const VersionsPill: React.FC = () => {
           .filter(Boolean)
           .join(' ')}
       >
-        {versions.totalDocs.toString()}
+        {versionsWithoutSnapshots.length.toString()}
       </span>
     )
 }

@@ -12,6 +12,7 @@ import { RenderComponent } from '../../providers/Config/RenderComponent.js'
 import { useConfig } from '../../providers/Config/index.js'
 import { useDocumentInfo } from '../../providers/DocumentInfo/index.js'
 import { useEditDepth } from '../../providers/EditDepth/index.js'
+import { useLocale } from '../../providers/Locale/index.js'
 import { useTranslation } from '../../providers/Translation/index.js'
 import { PopupList } from '../Popup/index.js'
 export const DefaultPublishButton: React.FC<{
@@ -37,6 +38,7 @@ export const DefaultPublishButton: React.FC<{
   } = config
 
   const { i18n, t } = useTranslation()
+  const { code } = useLocale()
   const label = labelProp || t('version:publishChanges')
 
   const hasNewerVersions = unpublishedVersions?.totalDocs > 0
@@ -91,13 +93,16 @@ export const DefaultPublishButton: React.FC<{
                   ? locale.label
                   : locale.label && locale.label[i18n?.language]
 
-              return (
-                <PopupList.ButtonGroup key={locale.code}>
-                  <PopupList.Button onClick={() => publishSpecificLocale(locale.code)}>
-                    {t('version:publishIn', { locale: formattedLabel || locale.code })}
-                  </PopupList.Button>
-                </PopupList.ButtonGroup>
-              )
+              const isActive = typeof locale === 'string' ? locale === code : locale.code === code
+
+              if (isActive)
+                return (
+                  <PopupList.ButtonGroup key={locale.code}>
+                    <PopupList.Button onClick={() => publishSpecificLocale(locale.code)}>
+                      {t('version:publishIn', { locale: formattedLabel || locale.code })}
+                    </PopupList.Button>
+                  </PopupList.ButtonGroup>
+                )
             })
           : null
       }
