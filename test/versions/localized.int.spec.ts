@@ -4,11 +4,12 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { initPayloadInt } from '../helpers/initPayloadInt.js'
-import { localizedCollectionSlug } from './slugs.js'
+import { localizedCollectionSlug, localizedGlobalSlug } from './slugs.js'
 
 let payload: Payload
 
 const collection = localizedCollectionSlug
+const global = localizedGlobalSlug
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -28,14 +29,15 @@ describe('Versions', () => {
   describe('Collections', () => {
     let postID: string
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       await payload.delete({
         collection,
         where: {},
       })
     })
 
-    it('should allow for publishing individual locales, not leaking draft data, and preserving existing draft data', async () => {
+    it('should save correct doc data when publishing individual locale', async () => {
+      // save spanish draft
       const draft1 = await payload.create({
         collection,
         data: {
@@ -47,6 +49,7 @@ describe('Versions', () => {
 
       postID = draft1.id
 
+      // save english draft
       const draft2 = await payload.update({
         id: postID,
         collection,
@@ -58,6 +61,7 @@ describe('Versions', () => {
         locale: 'en',
       })
 
+      // save german draft
       const draft3 = await payload.update({
         id: postID,
         collection,
@@ -68,6 +72,7 @@ describe('Versions', () => {
         locale: 'de',
       })
 
+      // publish only english
       const publishedEN1 = await payload.update({
         id: postID,
         collection,
@@ -220,6 +225,195 @@ describe('Versions', () => {
       expect(finalPublished.text.de).toStrictEqual('German published 1')
       expect(finalPublished.text.en).toStrictEqual('English published 3')
       expect(finalPublished.text.es).toStrictEqual('Spanish draft')
+    })
+
+    it('should not leak draft data', async () => {
+      const draft = await payload.create({
+        collection,
+        data: {
+          text: 'Spanish draft',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      const published = await payload.update({
+        id: draft.id,
+        collection,
+        data: {
+          text: 'English publish',
+          _status: 'published',
+        },
+        draft: false,
+        publishSpecificLocale: 'en',
+      })
+
+      const publishedOnlyEN = await payload.findByID({
+        collection,
+        id: published.id,
+        locale: 'all',
+      })
+
+      expect(publishedOnlyEN.text.es).toBeUndefined()
+      expect(publishedOnlyEN.text.en).toStrictEqual('English publish')
+    })
+
+    it('should merge draft data from other locales when publishing all', async () => {
+      const draft = await payload.create({
+        collection,
+        data: {
+          text: 'Spanish draft',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      const published = await payload.update({
+        id: draft.id,
+        collection,
+        data: {
+          text: 'English publish',
+          _status: 'published',
+        },
+        draft: false,
+        publishSpecificLocale: 'en',
+      })
+
+      const publishedOnlyEN = await payload.findByID({
+        collection,
+        id: published.id,
+        locale: 'all',
+      })
+
+      expect(publishedOnlyEN.text.es).toBeUndefined()
+      expect(publishedOnlyEN.text.en).toStrictEqual('English publish')
+
+      const published2 = await payload.update({
+        id: draft.id,
+        collection,
+        data: {
+          _status: 'published',
+        },
+        draft: false,
+      })
+
+      const publishedAll = await payload.findByID({
+        collection,
+        id: published2.id,
+        locale: 'all',
+      })
+
+      expect(publishedAll.text.es).toStrictEqual('Spanish draft')
+      expect(publishedAll.text.en).toStrictEqual('English publish')
+    })
+
+    it('should publish non-default individual locale', async () => {
+      const draft = await payload.create({
+        collection,
+        data: {
+          text: 'Spanish draft',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      const published = await payload.update({
+        id: draft.id,
+        collection,
+        data: {
+          text: 'German publish',
+          _status: 'published',
+        },
+        draft: false,
+        publishSpecificLocale: 'de',
+      })
+
+      const publishedOnlyDE = await payload.findByID({
+        collection,
+        id: published.id,
+        locale: 'all',
+      })
+
+      expect(publishedOnlyDE.text.es).toBeUndefined()
+      expect(publishedOnlyDE.text.en).toBeUndefined()
+      expect(publishedOnlyDE.text.de).toStrictEqual('German publish')
+    })
+
+    it('should show correct data in latest version', async () => {
+      const draft = await payload.create({
+        collection,
+        data: {
+          text: 'Spanish draft',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      const published = await payload.update({
+        id: draft.id,
+        collection,
+        data: {
+          text: 'English publish',
+          _status: 'published',
+        },
+        draft: false,
+        publishSpecificLocale: 'en',
+      })
+
+      const publishedOnlyEN = await payload.findByID({
+        collection,
+        id: published.id,
+        locale: 'all',
+      })
+
+      const allVersions = await payload.findVersions({
+        collection,
+        locale: 'all',
+      })
+
+      const versions = allVersions.docs.filter((version) => version.parent === published.id)
+      const latestVersion = versions[0].version
+
+      expect(latestVersion.text.es).toStrictEqual('Spanish draft')
+      expect(latestVersion.text.en).toStrictEqual('English publish')
+    })
+  })
+
+  describe('Globals', () => {
+    it('should save correct global data when publishing individual locale', async () => {
+      // save spanish draft
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Spanish draft',
+          content: 'Spanish draft content',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      // publish only english
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Eng published',
+          _status: 'published',
+        },
+        locale: 'en',
+        publishSpecificLocale: 'en',
+      })
+
+      const globalData = await payload.findGlobal({
+        slug: global,
+        locale: 'all',
+      })
+
+      // We're getting the published version,
+      // which should not leak any unpublished Spanish content
+      // and should retain the English fields that were not explicitly
+      // passed in from publishedEN1
+      expect(globalData.title.es).toBeUndefined()
+      expect(globalData.content.en).toStrictEqual('Eng published')
     })
   })
 })

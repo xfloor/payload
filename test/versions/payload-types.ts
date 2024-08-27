@@ -278,6 +278,7 @@ export interface DisablePublishGlobal {
 export interface LocalizedGlobal {
   id: string;
   title?: string | null;
+  content?: string | null;
   _status?: ('draft' | 'published') | null;
   updatedAt?: string | null;
   createdAt?: string | null;

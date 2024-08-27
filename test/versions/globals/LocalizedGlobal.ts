@@ -10,6 +10,11 @@ const LocalizedGlobal: GlobalConfig = {
       type: 'text',
       localized: true,
     },
+    {
+      name: 'content',
+      type: 'text',
+      localized: true,
+    },
   ],
   versions: {
     drafts: true,

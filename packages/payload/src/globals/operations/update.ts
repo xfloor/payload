@@ -23,6 +23,7 @@ type Args<TSlug extends GlobalSlug> = {
   draft?: boolean
   globalConfig: SanitizedGlobalConfig
   overrideAccess?: boolean
+  publishSpecificLocale?: string
   req: PayloadRequest
   showHiddenFields?: boolean
   slug: string
@@ -31,6 +32,10 @@ type Args<TSlug extends GlobalSlug> = {
 export const updateOperation = async <TSlug extends GlobalSlug>(
   args: Args<TSlug>,
 ): Promise<DataFromGlobalSlug<TSlug>> => {
+  if (args.publishSpecificLocale) {
+    args.req.locale = args.publishSpecificLocale
+  }
+
   const {
     slug,
     autosave,
@@ -38,6 +43,7 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
     draft: draftArg,
     globalConfig,
     overrideAccess,
+    publishSpecificLocale,
     req: { fallbackLocale, locale, payload },
     req,
     showHiddenFields,
@@ -49,7 +55,6 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
     let { data } = args
 
     const shouldSaveDraft = Boolean(draftArg && globalConfig.versions?.drafts)
-    const publishSpecificLocale = req.query?.publishSpecificLocale
 
     // /////////////////////////////////////
     // 1. Retrieve and execute access
@@ -161,17 +166,44 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
     // beforeChange - Fields
     // /////////////////////////////////////
 
-    let result = await beforeChange({
+    let publishedDocWithLocales = globalJSON
+    let versionSnapshotResult
+
+    const beforeChangeArgs: any = {
       collection: null,
       context: req.context,
       data,
       doc: originalDoc,
-      docWithLocales: globalJSON,
+      docWithLocales: undefined,
       global: globalConfig,
       operation: 'update',
       req,
       skipValidation:
-        shouldSaveDraft && globalConfig.versions.drafts && !globalConfig.versions.drafts.validate,
+        shouldSaveDraft &&
+        globalConfig.versions.drafts &&
+        !globalConfig.versions.drafts.validate &&
+        data._status !== 'published',
+    }
+
+    if (publishSpecificLocale) {
+      publishedDocWithLocales = await getLatestGlobalVersion({
+        slug: global,
+        config: globalConfig,
+        payload,
+        published: true,
+        req,
+        where: query,
+      })
+
+      versionSnapshotResult = await beforeChange({
+        ...beforeChangeArgs,
+        docWithLocales: globalJSON,
+      })
+    }
+
+    let result = await beforeChange({
+      ...beforeChangeArgs,
+      docWithLocales: publishedDocWithLocales,
     })
 
     // /////////////////////////////////////
@@ -204,13 +236,14 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
         autosave,
         docWithLocales: {
           ...result,
-          createdAt: result.createdAt,
-          updatedAt: result.updatedAt,
+          createdAt: publishedDocWithLocales.createdAt,
+          updatedAt: publishedDocWithLocales.updatedAt,
         },
         draft: shouldSaveDraft,
         global: globalConfig,
         payload,
         req,
+        snapshot: versionSnapshotResult,
       })
       result.globalType = globalType
     }
