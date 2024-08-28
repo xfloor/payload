@@ -26,6 +26,11 @@ export default defineConfig({
   expect: {
     timeout: EXPECT_TIMEOUT,
   },
+  webServer: {
+    command: 'cd ../ && pnpm dev fields',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
   workers: 16,
   maxFailures: process.env.CI ? undefined : undefined,
   retries: process.env.CI ? 5 : undefined,
