@@ -1,5 +1,5 @@
 'use client'
-import { Pill, useConfig, useLocale, useTableCell, useTranslation } from '@payloadcms/ui'
+import { Pill, useConfig, useTableCell, useTranslation } from '@payloadcms/ui'
 import React, { Fragment } from 'react'
 
 type AutosaveCellProps = {
@@ -51,12 +51,15 @@ export const AutosaveCell: React.FC<AutosaveCellProps> = ({
 
   const { currentLabel, latestVersion, pillStyle, previousLabel } = versionInfo[status] || {}
 
-  if (publishedLocale) {
-    const locale = localization && localization.locales.find((loc) => loc.code === publishedLocale)
-    const formattedLabel =
-      typeof locale.label === 'string' ? locale.label : locale.label && locale.label[i18n?.language]
+  if (localization && localization?.locales && publishedLocale) {
+    const localeCode = Array.isArray(publishedLocale) ? publishedLocale[0] : publishedLocale
 
-    publishedLocalePill = <Pill>{formattedLabel}</Pill>
+    const locale = localization.locales.find((loc) => loc.code === localeCode)
+    const formattedLabel = locale?.label?.[i18n?.language] || locale?.label
+
+    if (formattedLabel) {
+      publishedLocalePill = <Pill>{formattedLabel}</Pill>
+    }
   }
 
   return (

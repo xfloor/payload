@@ -101,6 +101,11 @@ export const VersionsView: PayloadServerReactComponent<EditViewComponent> = asyn
         req,
         sort: sort as string,
         user,
+        where: {
+          snapshot: {
+            not_equals: true,
+          },
+        },
       })
 
       if (globalConfig?.versions?.drafts) {

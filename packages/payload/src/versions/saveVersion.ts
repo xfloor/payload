@@ -109,23 +109,21 @@ export const saveVersion = async ({
         createdAt: doc?.createdAt ? new Date(doc.createdAt).toISOString() : now,
         globalSlug: undefined,
         parent: collection ? id : undefined,
+        publishedLocale: publishSpecificLocale || undefined,
         req,
         updatedAt: draft ? now : new Date(doc.updatedAt).toISOString(),
+        versionData,
       }
 
       if (collection) {
         createVersionArgs.collectionSlug = collection.slug
+        result = await payload.db.createVersion(createVersionArgs)
       }
 
       if (global) {
         createVersionArgs.globalSlug = global.slug
+        result = await payload.db.createGlobalVersion(createVersionArgs)
       }
-
-      result = await payload.db.createVersion({
-        ...createVersionArgs,
-        publishedLocale: publishSpecificLocale,
-        versionData,
-      })
 
       if (publishSpecificLocale && snapshot) {
         const snapshotData = deepCopyObjectSimple(snapshot)
@@ -135,13 +133,20 @@ export const saveVersion = async ({
 
         const snapshotDate = new Date().toISOString()
 
-        await payload.db.createVersion({
+        const updatedArgs = {
           ...createVersionArgs,
           createdAt: snapshotDate,
           snapshot: true,
           updatedAt: snapshotDate,
           versionData: snapshotData,
-        })
+        } as any
+
+        if (collection) {
+          await payload.db.createVersion(updatedArgs)
+        }
+        if (global) {
+          await payload.db.createGlobalVersion(updatedArgs)
+        }
       }
     }
   } catch (err) {

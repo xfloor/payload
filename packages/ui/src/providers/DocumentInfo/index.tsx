@@ -147,6 +147,12 @@ const DocumentInfo: React.FC<
       },
     }
 
+    versionParams.where.and.push({
+      snapshot: {
+        not_equals: true,
+      },
+    })
+
     const publishedVersionParams: { depth: number; locale: string; where: Where } = {
       depth: 0,
       locale: locale || undefined,

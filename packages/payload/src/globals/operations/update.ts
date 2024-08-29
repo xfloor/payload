@@ -1,7 +1,7 @@
 import type { DeepPartial } from 'ts-essentials'
 
 import type { GlobalSlug, JsonObject } from '../../index.js'
-import type { PayloadRequest, Where } from '../../types/index.js'
+import type { Operation, PayloadRequest, Where } from '../../types/index.js'
 import type { DataFromGlobalSlug, SanitizedGlobalConfig } from '../config/types.js'
 
 import executeAccess from '../../auth/executeAccess.js'
@@ -79,19 +79,19 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
     // /////////////////////////////////////
     // 2. Retrieve document
     // /////////////////////////////////////
-    const { global, globalExists } = await getLatestGlobalVersion({
+    const globalVersion = await getLatestGlobalVersion({
       slug,
       config: globalConfig,
       locale,
       payload,
-      published: publishSpecificLocale !== undefined ? true : false,
       req,
       where: query,
     })
+    const { global, globalExists } = globalVersion || {}
 
     let globalJSON: JsonObject = {}
 
-    if (global) {
+    if (globalVersion && globalVersion.global) {
       globalJSON = deepCopyObjectSimple(global)
 
       if (globalJSON._id) {
@@ -165,35 +165,33 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
     // /////////////////////////////////////
     // beforeChange - Fields
     // /////////////////////////////////////
-
     let publishedDocWithLocales = globalJSON
     let versionSnapshotResult
 
-    const beforeChangeArgs: any = {
+    const beforeChangeArgs = {
       collection: null,
       context: req.context,
       data,
       doc: originalDoc,
       docWithLocales: undefined,
       global: globalConfig,
-      operation: 'update',
+      operation: 'update' as Operation,
       req,
       skipValidation:
-        shouldSaveDraft &&
-        globalConfig.versions.drafts &&
-        !globalConfig.versions.drafts.validate &&
-        data._status !== 'published',
+        shouldSaveDraft && globalConfig.versions.drafts && !globalConfig.versions.drafts.validate,
     }
 
     if (publishSpecificLocale) {
-      publishedDocWithLocales = await getLatestGlobalVersion({
-        slug: global,
+      const latestVersion = await getLatestGlobalVersion({
+        slug,
         config: globalConfig,
         payload,
         published: true,
         req,
         where: query,
       })
+
+      publishedDocWithLocales = latestVersion?.global || {}
 
       versionSnapshotResult = await beforeChange({
         ...beforeChangeArgs,
@@ -229,23 +227,27 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
     // /////////////////////////////////////
     // Create version
     // /////////////////////////////////////
-
     if (globalConfig.versions) {
       const { globalType } = result
       result = await saveVersion({
         autosave,
         docWithLocales: {
           ...result,
-          createdAt: publishedDocWithLocales.createdAt,
-          updatedAt: publishedDocWithLocales.updatedAt,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
         },
         draft: shouldSaveDraft,
         global: globalConfig,
         payload,
+        publishSpecificLocale,
         req,
         snapshot: versionSnapshotResult,
       })
-      result.globalType = globalType
+
+      result = {
+        ...result,
+        globalType,
+      }
     }
 
     // /////////////////////////////////////
