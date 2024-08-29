@@ -134,8 +134,12 @@ export const updateByIDOperation = async <TSlug extends CollectionSlug>(
       req,
     })
 
-    if (!docWithLocales && !hasWherePolicy) throw new NotFound(req.t)
-    if (!docWithLocales && hasWherePolicy) throw new Forbidden(req.t)
+    if (!docWithLocales && !hasWherePolicy) {
+      throw new NotFound(req.t)
+    }
+    if (!docWithLocales && hasWherePolicy) {
+      throw new Forbidden(req.t)
+    }
 
     const originalDoc = await afterRead({
       collection: collectionConfig,
@@ -437,7 +441,9 @@ export const updateByIDOperation = async <TSlug extends CollectionSlug>(
     // Return results
     // /////////////////////////////////////
 
-    if (shouldCommit) await commitTransaction(req)
+    if (shouldCommit) {
+      await commitTransaction(req)
+    }
 
     return result
   } catch (error: unknown) {

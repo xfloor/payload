@@ -204,7 +204,9 @@ export const promise = async ({
               const hookedValue = await currentHook({
                 collection,
                 context,
+                currentDepth,
                 data: doc,
+                depth,
                 draft,
                 field,
                 findMany,
@@ -231,7 +233,9 @@ export const promise = async ({
           const hookedValue = await currentHook({
             collection,
             context,
+            currentDepth,
             data: doc,
+            depth,
             draft,
             field,
             findMany,
@@ -309,7 +313,9 @@ export const promise = async ({
   switch (field.type) {
     case 'group': {
       let groupDoc = siblingDoc[field.name] as JsonObject
-      if (typeof siblingDoc[field.name] !== 'object') groupDoc = {}
+      if (typeof siblingDoc[field.name] !== 'object') {
+        groupDoc = {}
+      }
 
       traverseFields({
         collection,
@@ -520,7 +526,9 @@ export const promise = async ({
       let tabDoc = siblingDoc
       if (tabHasName(field)) {
         tabDoc = siblingDoc[field.name] as JsonObject
-        if (typeof siblingDoc[field.name] !== 'object') tabDoc = {}
+        if (typeof siblingDoc[field.name] !== 'object') {
+          tabDoc = {}
+        }
       }
 
       traverseFields({

@@ -1,6 +1,7 @@
 'use client'
 
-import type { FieldType, Options, UploadFieldProps } from '@payloadcms/ui'
+import type { FieldType, Options } from '@payloadcms/ui'
+import type { UploadFieldProps } from 'payload'
 
 import {
   FieldLabel,
@@ -50,7 +51,9 @@ export const MetaImageComponent: React.FC<MetaImageProps> = (props) => {
   const { errorMessage, setValue, showError, value } = field
 
   const regenerateImage = useCallback(async () => {
-    if (!hasGenerateImageFn) return
+    if (!hasGenerateImageFn) {
+      return
+    }
 
     const genImageResponse = await fetch('/api/plugin-seo/generate-image', {
       body: JSON.stringify({
@@ -156,6 +159,7 @@ export const MetaImageComponent: React.FC<MetaImageProps> = (props) => {
               setValue(null)
             }
           }}
+          path={field.path}
           relationTo={relationTo}
           required={required}
           serverURL={serverURL}

@@ -320,7 +320,9 @@ export const updateOperation = async <TSlug extends GlobalSlug>(
     // Return results
     // /////////////////////////////////////
 
-    if (shouldCommit) await commitTransaction(req)
+    if (shouldCommit) {
+      await commitTransaction(req)
+    }
 
     return result
   } catch (error: unknown) {

@@ -141,13 +141,14 @@ export function UploadInput(props: UploadInputProps) {
     }
   }, [value, activeRelationTo, filterOptionsFromProps])
 
-  const [ListDrawer, ListDrawerToggler, { closeDrawer: closeListDrawer }] = useListDrawer({
-    collectionSlugs: typeof relationTo === 'string' ? [relationTo] : relationTo,
-    filterOptions,
-  })
+  const [ListDrawer, , { closeDrawer: closeListDrawer, openDrawer: openListDrawer }] =
+    useListDrawer({
+      collectionSlugs: typeof relationTo === 'string' ? [relationTo] : relationTo,
+      filterOptions,
+    })
   const [
     CreateDocDrawer,
-    _,
+    ,
     { closeDrawer: closeCreateDocDrawer, openDrawer: openCreateDocDrawer },
   ] = useDocumentDrawer({
     collectionSlug: activeRelationTo,
@@ -258,10 +259,14 @@ export function UploadInput(props: UploadInputProps) {
         dataTransfer.items.add(fileList[0])
         fileListToUse = dataTransfer.files
       }
-      if (fileListToUse) setInitialFiles(fileListToUse)
+      if (fileListToUse) {
+        setInitialFiles(fileListToUse)
+      }
       setCollectionSlug(relationTo)
       setOnSuccess(onUploadSuccess)
-      if (typeof maxRows === 'number') setMaxFiles(maxRows)
+      if (typeof maxRows === 'number') {
+        setMaxFiles(maxRows)
+      }
       openModal(drawerSlug)
     },
     [
@@ -412,6 +417,7 @@ export function UploadInput(props: UploadInputProps) {
       ]
         .filter(Boolean)
         .join(' ')}
+      id={`field-${path.replace(/\./g, '__')}`}
       style={{
         ...style,
         width,
@@ -476,6 +482,7 @@ export function UploadInput(props: UploadInputProps) {
               <div className={`${baseClass}__dropzoneContent__buttons`}>
                 <Button
                   buttonStyle="pill"
+                  className={`${baseClass}__createNewToggler`}
                   disabled={readOnly || !canCreate}
                   onClick={() => {
                     if (!readOnly) {
@@ -491,11 +498,15 @@ export function UploadInput(props: UploadInputProps) {
                   {t('general:createNew')}
                 </Button>
                 <span className={`${baseClass}__dropzoneContent__orText`}>{t('general:or')}</span>
-                <ListDrawerToggler className={`${baseClass}__toggler`} disabled={readOnly}>
-                  <Button buttonStyle="pill" el="span" size="small">
-                    {t('fields:chooseFromExisting')}
-                  </Button>
-                </ListDrawerToggler>
+                <Button
+                  buttonStyle="pill"
+                  className={`${baseClass}__listToggler`}
+                  disabled={readOnly}
+                  onClick={openListDrawer}
+                  size="small"
+                >
+                  {t('fields:chooseFromExisting')}
+                </Button>
 
                 <CreateDocDrawer onSave={onDocCreate} />
                 <ListDrawer
