@@ -381,6 +381,16 @@ describe('Versions', () => {
 
   describe('Globals', () => {
     it('should save correct global data when publishing individual locale', async () => {
+      // publish german
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'German published',
+          _status: 'published',
+        },
+        locale: 'de',
+      })
+
       // save spanish draft
       await payload.updateGlobal({
         slug: global,
@@ -408,12 +418,161 @@ describe('Versions', () => {
         locale: 'all',
       })
 
-      // We're getting the published version,
-      // which should not leak any unpublished Spanish content
-      // and should retain the English fields that were not explicitly
-      // passed in from publishedEN1
+      // Expect only previously published data to be present
       expect(globalData.title.es).toBeUndefined()
-      expect(globalData.content.en).toStrictEqual('Eng published')
+      expect(globalData.title.en).toStrictEqual('Eng published')
+      expect(globalData.title.de).toStrictEqual('German published')
+    })
+
+    it('should not leak draft data', async () => {
+      // save spanish draft
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Another spanish draft',
+          content: 'Spanish draft content',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      // publish only english
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Eng published',
+          _status: 'published',
+        },
+        locale: 'en',
+        publishSpecificLocale: 'en',
+      })
+
+      const globalData = await payload.findGlobal({
+        slug: global,
+        locale: 'all',
+      })
+
+      // Expect no draft data to be present
+      expect(globalData.title.es).toBeUndefined()
+      expect(globalData.content).toBeUndefined()
+      expect(globalData.title.en).toStrictEqual('Eng published')
+    })
+
+    it('should merge draft data from other locales when publishing all', async () => {
+      // save spanish draft
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Another spanish draft',
+          content: 'Spanish draft content',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      // publish only english
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Eng published',
+          _status: 'published',
+        },
+        locale: 'en',
+        publishSpecificLocale: 'en',
+      })
+
+      const publishedOnlyEN = await payload.findGlobal({
+        slug: global,
+        locale: 'all',
+      })
+
+      expect(publishedOnlyEN.text.es).toBeUndefined()
+      expect(publishedOnlyEN.text.en).toStrictEqual('English publish')
+
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          _status: 'published',
+        },
+        draft: false,
+      })
+
+      const publishedAll = await payload.findGlobal({
+        slug: global,
+        locale: 'all',
+      })
+
+      expect(publishedAll.text.es).toStrictEqual('Spanish draft')
+      expect(publishedAll.text.en).toStrictEqual('English publish')
+    })
+
+    it('should publish non-default individual locale', async () => {
+      // save spanish draft
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Spanish draft',
+          content: 'Spanish draft content',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      // publish only german
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'German published',
+          _status: 'published',
+        },
+        locale: 'de',
+        publishSpecificLocale: 'de',
+      })
+
+      const globalData = await payload.findGlobal({
+        slug: global,
+        locale: 'all',
+      })
+
+      // Expect no draft data to be present
+      expect(globalData.title.es).toBeUndefined()
+      expect(globalData.content).toBeUndefined()
+      expect(globalData.title.de).toStrictEqual('German published')
+    })
+
+    it('should show correct data in latest version', async () => {
+      // save spanish draft
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Spanish draft',
+          content: 'Spanish draft content',
+        },
+        draft: true,
+        locale: 'es',
+      })
+
+      // publish only english
+      await payload.updateGlobal({
+        slug: global,
+        data: {
+          title: 'Eng published',
+          _status: 'published',
+        },
+        locale: 'en',
+        publishSpecificLocale: 'en',
+      })
+
+      const allVersions = await payload.findGlobalVersions({
+        slug: global,
+        locale: 'all',
+      })
+
+      const versions = allVersions.docs
+      const latestVersion = versions[0].version
+
+      expect(latestVersion.title.es).toBeUndefined()
+      expect(latestVersion.title.en).toStrictEqual('Eng published')
     })
   })
 })
