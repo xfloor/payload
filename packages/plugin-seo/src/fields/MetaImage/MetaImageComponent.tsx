@@ -1,7 +1,7 @@
 'use client'
 
 import type { FieldType, Options } from '@payloadcms/ui'
-import type { UploadFieldProps } from 'payload'
+import type { UploadFieldClientProps } from 'payload'
 
 import {
   FieldLabel,
@@ -23,7 +23,7 @@ import { Pill } from '../../ui/Pill.js'
 
 type MetaImageProps = {
   readonly hasGenerateImageFn: boolean
-} & UploadFieldProps
+} & UploadFieldClientProps
 
 export const MetaImageComponent: React.FC<MetaImageProps> = (props) => {
   const {
@@ -153,8 +153,12 @@ export const MetaImageComponent: React.FC<MetaImageProps> = (props) => {
           label={undefined}
           onChange={(incomingImage) => {
             if (incomingImage !== null) {
-              const { id: incomingID } = incomingImage
-              setValue(incomingID)
+              if (typeof incomingImage === 'object') {
+                const { id: incomingID } = incomingImage
+                setValue(incomingID)
+              } else {
+                setValue(incomingImage)
+              }
             } else {
               setValue(null)
             }

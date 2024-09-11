@@ -257,10 +257,10 @@ export const getTableColumnFromPath = ({
             tableType = 'numbers'
             columnName = 'number'
           }
-          newTableName = `${tableName}_${tableType}`
+          newTableName = `${rootTableName}_${tableType}`
           const joinConstraints = [
-            eq(adapter.tables[tableName].id, adapter.tables[newTableName].parent),
-            eq(adapter.tables[newTableName].path, `${constraintPath}${field.name}`),
+            eq(adapter.tables[rootTableName].id, adapter.tables[newTableName].parent),
+            like(adapter.tables[newTableName].path, `${constraintPath}${field.name}`),
           ]
 
           if (locale && field.localized && adapter.payload.config.localization) {
@@ -297,11 +297,13 @@ export const getTableColumnFromPath = ({
           `${tableName}_${tableNameSuffix}${toSnakeCase(field.name)}`,
         )
 
+        const arrayParentTable = aliasTable || adapter.tables[tableName]
+
         constraintPath = `${constraintPath}${field.name}.%.`
         if (locale && field.localized && adapter.payload.config.localization) {
           joins.push({
             condition: and(
-              eq(adapter.tables[tableName].id, adapter.tables[newTableName]._parentID),
+              eq(arrayParentTable.id, adapter.tables[newTableName]._parentID),
               eq(adapter.tables[newTableName]._locale, locale),
             ),
             table: adapter.tables[newTableName],
@@ -315,7 +317,7 @@ export const getTableColumnFromPath = ({
           }
         } else {
           joins.push({
-            condition: eq(adapter.tables[tableName].id, adapter.tables[newTableName]._parentID),
+            condition: eq(arrayParentTable.id, adapter.tables[newTableName]._parentID),
             table: adapter.tables[newTableName],
           })
         }
@@ -539,7 +541,9 @@ export const getTableColumnFromPath = ({
               field,
               getNotNullColumnByValue: (val) => {
                 const matchedRelation = relationTo.find((relation) => relation === val)
-                if (matchedRelation) return `${matchedRelation}ID`
+                if (matchedRelation) {
+                  return `${matchedRelation}ID`
+                }
                 return undefined
               },
               table: aliasRelationshipTable,
